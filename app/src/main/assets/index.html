@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Aura Invoice</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --tg-blue: #2481cc;
+      --tg-blue-active: #1c68a6;
+      --tg-bg: #f4f4f5;
+      --tg-surface: #ffffff;
+      --tg-text: #000000;
+      --tg-subtext: #707579;
+      --tg-card-border: rgba(0, 0, 0, 0.05);
+      --ios-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      --ios-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --tg-bg: #0e1621;
+        --tg-surface: #17212b;
+        --tg-text: #ffffff;
+        --tg-subtext: #7f8c99;
+        --tg-card-border: rgba(255, 255, 255, 0.05);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--tg-bg);
+      color: var(--tg-text);
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(23, 33, 43, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--tg-card-border);
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.4px;
+    }
+
+    .stats-card {
+      background: var(--tg-surface);
+      margin: 16px;
+      padding: 20px;
+      border-radius: 18px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+      border: 1px solid var(--tg-card-border);
+      transition: transform 0.2s var(--ios-smooth);
+    }
+
+    .stats-card:active {
+      transform: scale(0.98);
+    }
+
+    .balance-label {
+      font-size: 13px;
+      color: var(--tg-subtext);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .balance-val {
+      font-size: 32px;
+      font-weight: 800;
+      margin: 6px 0 0;
+      letter-spacing: -1px;
+    }
+
+    .section-title {
+      padding: 8px 24px 4px;
+      font-size: 13px;
+      color: var(--tg-subtext);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .list-container {
+      background: var(--tg-surface);
+      margin: 8px 16px 100px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--tg-card-border);
+    }
+
+    .list-item {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--tg-card-border);
+      transition: background 0.15s ease, transform 0.15s var(--ios-smooth);
+      cursor: pointer;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item:active {
+      background: rgba(36, 129, 204, 0.08);
+      transform: scale(0.99);
+    }
+
+    .item-title { font-weight: 600; font-size: 16px; }
+    .item-sub { font-size: 13px; color: var(--tg-subtext); margin-top: 2px; }
+    .item-amount { font-weight: 700; font-size: 16px; color: #10b981; }
+
+    .fab {
+      position: fixed;
+      bottom: 28px;
+      right: 20px;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: var(--tg-blue);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(36, 129, 204, 0.4);
+      cursor: pointer;
+      border: none;
+      transition: transform 0.3s var(--ios-spring), background 0.2s;
+      z-index: 90;
+    }
+
+    .fab:active {
+      transform: scale(0.88);
+      background: var(--tg-blue-active);
+    }
+
+    .fab svg { width: 26px; height: 26px; fill: currentColor; }
+
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s var(--ios-smooth);
+    }
+
+    .sheet-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--tg-surface);
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      padding: 24px 20px 36px;
+      z-index: 201;
+      transform: translateY(100%);
+      transition: transform 0.4s var(--ios-spring);
+    }
+
+    .sheet-overlay.active .bottom-sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 5px;
+      background: var(--tg-subtext);
+      opacity: 0.3;
+      border-radius: 10px;
+      margin: 0 auto 16px;
+    }
+
+    .input-field {
+      width: 100%;
+      background: var(--tg-bg);
+      border: 1px solid var(--tg-card-border);
+      color: var(--tg-text);
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      border-color: var(--tg-blue);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--tg-blue);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s var(--ios-spring), background 0.2s;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+      background: var(--tg-blue-active);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Aura Invoice</h1>
+    <span style="color: var(--tg-blue); font-weight: 600; font-size: 14px;">Pro</span>
+  </div>
+
+  <div class="stats-card">
+    <div class="balance-label">Total Outstanding</div>
+    <div class="balance-val" id="totalBalance">$0.00</div>
+  </div>
+
+  <div class="section-title">Recent Invoices</div>
+
+  <div class="list-container" id="invoiceList">
+    <!-- Items rendered dynamically -->
+  </div>
+
+  <button class="fab" onclick="openModal()">
+    <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+  </button>
+
+  <!-- Bottom Sheet Overlay -->
+  <div class="sheet-overlay" id="sheetOverlay" onclick="closeModal(event)">
+    <div class="bottom-sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <h2 style="margin-top:0; font-size: 20px; margin-bottom: 16px;">New Invoice</h2>
+      <input type="text" id="client" class="input-field" placeholder="Client Name">
+      <input type="text" id="desc" class="input-field" placeholder="Service Description">
+      <input type="number" id="amount" class="input-field" placeholder="Amount ($)">
+      <button class="btn-primary" onclick="createInvoice()">Create & Save Invoice</button>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+
+    let invoices = JSON.parse(localStorage.getItem('aura_invoices') || '[]');
+
+    function renderInvoices() {
+      const container = document.getElementById('invoiceList');
+      const totalEl = document.getElementById('totalBalance');
+      container.innerHTML = '';
+
+      if (invoices.length === 0) {
+        container.innerHTML = `
+          <div style="padding: 32px; text-align: center; color: var(--tg-subtext);">
+            No invoices generated yet.
+          </div>`;
+        totalEl.innerText = '$0.00';
+        return;
+      }
+
+      let sum = 0;
+      invoices.forEach((inv, index) => {
+        sum += parseFloat(inv.amount);
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.onclick = () => printInvoice(inv);
+        item.innerHTML = `
+          <div>
+            <div class="item-title">${escapeHtml(inv.client)}</div>
+            <div class="item-sub">${escapeHtml(inv.desc)}</div>
+          </div>
+          <div class="item-amount">$${parseFloat(inv.amount).toFixed(2)}</div>
+        `;
+        container.appendChild(item);
+      });
+
+      totalEl.innerText = `$${sum.toFixed(2)}`;
+    }
+
+    function openModal() {
+      document.getElementById('sheetOverlay').classList.add('active');
+    }
+
+    function closeModal(e) {
+      document.getElementById('sheetOverlay').classList.remove('active');
+    }
+
+    function createInvoice() {
+      const client = document.getElementById('client').value.trim();
+      const desc = document.getElementById('desc').value.trim();
+      const amount = document.getElementById('amount').value.trim();
+
+      if (!client || !amount) return;
+
+      invoices.unshift({ client, desc, amount, date: new Date().toLocaleDateString() });
+      localStorage.setItem('aura_invoices', JSON.stringify(invoices));
+      
+      document.getElementById('client').value = '';
+      document.getElementById('desc').value = '';
+      document.getElementById('amount').value = '';
+      
+      closeModal();
+      renderInvoices();
+    }
+
+    function printInvoice(inv) {
+      window.print();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    renderInvoices();
+  </script>
+</body>
+</html>

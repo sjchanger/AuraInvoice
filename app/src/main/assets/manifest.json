@@ -1,0 +1,9 @@
+{
+  "short_name": "Aura",
+  "name": "Aura Invoice Pro",
+  "icons": [],
+  "start_url": "index.html",
+  "background_color": "#0e1621",
+  "theme_color": "#2481cc",
+  "display": "standalone"
+}
